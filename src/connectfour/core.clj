@@ -37,33 +37,34 @@
   [board x y player]
   (let [row (map #(get % y) board)]
     (if (>= (count (filter #(= % (field player)) row)) 4)
-      (let [sublist1 (when (>= x 3) (subvec (vec row) (- x 3) x))
-            sublist2 (when (>= x 2) (subvec (vec row) (- x 2) (+ x 1)))
-            sublist3 (when (>= x 1) (subvec (vec row) (- x 1) (+ x 2)))
-            sublist4 (when (<= x (- (count row) 4)) (subvec (vec row) x (+ x 3)))]
-        (or (every? #(= % (field player)) sublist1)
-            (every? #(= % (field player)) sublist2)
-            (every? #(= % (field player)) sublist3)
-            (every? #(= % (field player)) sublist4)))
+      (let [sublist (subvec (vec row) (- x (min x 3)) (+ x (- 3 (min x 3))))]
+        (every? #(= % (field player)) sublist))
       false)))
 
-(defn win-diagonally-left?
+(defn win-diagonally?
   "Check if the player has won the game diagonally from top left to bottom right."
-  [board x y player]
-  (let [diag (for [i (range (when (> (+ x y) 4) y 0) (+ x y))] (get-in board [(- x (- x i)) (- (+ y x) i)]))]
-    (println diag)))
-
-;; (defn win-diagonally?
-;;   "Check if the player has won the game diagonally."
-;;   [board x y player]
-;;   (or (win-diagonally-left? board x y player)
-;;       (win-diagonally-right? board x y player)))
+  [board x y player direction]
+  (let [diag (for [i (range -6 6)
+                   :let [x' (+ x i) y' (direction y i)]
+                   :when (and (>= x' 0) (< x' 7) (>= y' 0) (< y' 6))]
+              (get-in board [x' y']))]
+    (if (>= (count (filter #(= % (field player)) diag)) 4) 
+      (let [sublist (for [i (range (- (count diag) 3))
+                          :let [k (nth diag i) l (nth diag (+ i 1)) m (nth diag (+ i 2)) n (nth diag (+ i 3))]]
+                      (if (every? #(= % (field player)) [k l m n])
+                          true
+                          false))]
+          (some true? sublist))
+      false)))
 
 (defn win?
   "Check if the player has won the game."
   [board x y player]
-  (or (win-vertically? board x y player)
-      (win-horizontally? board x y player)))
+  (boolean (or
+            (win-vertically? board x y player)
+            (win-horizontally? board x y player)
+            (win-diagonally? board x y player +)
+            (win-diagonally? board x y player -))))
 
 
 (defn -main
@@ -76,14 +77,14 @@
     (loop [player 1]
       (println (str "Player " player ", please enter a column number: "))
       (let [x (read) y (get-top-y @board x)]
-        (if (or (< x 0) (> x 6))
+        (if (or (< x 0) (> x 6) (every? #(not= (field 0) %) (get-in @board [x])))
           (do
-            (println "Invalid column number. Please enter a number between 0 and 6.")
+            (println "Invalid column number. Please try again.")
             (recur player))
           (do
             (swap! board #(insert % x y player))
             (print-board @board)
-            (if (win-diagonally-left? @board x y player)
+            (if (win? @board x y player)
               (do
                 (println (str "Player " player " wins!"))
                 (System/exit 0))
