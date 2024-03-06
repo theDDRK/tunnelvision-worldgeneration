@@ -2,7 +2,7 @@
 
 (def field ["-", "X", "O"])
 (def ai 4)
-(def debug false)
+(def debug true)
 
 (def empty-board
   "Empty board 7x6"
@@ -49,11 +49,15 @@
 
 (defn win-horizontally?
   "Check if the player has won the game horizontally (a column of the board vector)."
-  [board x y player]
+  [board y player]
   (let [row (map #(get % y) board)]
     (if (>= (count (filter #(= % (field player)) row)) 4)
-      (let [sublist (subvec (vec row) (- x (min x 3)) (+ x (- 3 (min x 3))))]
-        (every? #(= % (field player)) sublist))
+      (let [sublist (for [i (range (- (count row) 3))
+                          :let [k (nth row i) l (nth row (+ i 1)) m (nth row (+ i 2)) n (nth row (+ i 3))]]
+                      (if (every? #(= % (field player)) [k l m n])
+                        true
+                        false))]
+        (some true? sublist))
       false)))
 
 (defn win-diagonally?
@@ -79,7 +83,7 @@
     false
     (boolean (or
               (win-vertically? board x y player)
-              (win-horizontally? board x y player)
+              (win-horizontally? board y player)
               (win-diagonally? board x y player +)
               (win-diagonally? board x y player -)))))
 
@@ -122,10 +126,10 @@
     (throw (IllegalArgumentException. (str "x must be in range of 0-6 x:" x)))(flush))
   (cond
     (zero? depth) (score-board board player)
-    (win? board x (get-top-y board x) player) (if (= player 1) -99999 99999)
+    (win? board x (first (filter #(not= (field 0) (get-in board [x %])) (range 6))) player) 99999
     (draw? board) 0
     :else
-    (+ (- (apply max (pmap #(minimax
+    (+ (- (apply max (map #(minimax
                             (insert board % (if (= player 1) 2 1))
                             (if (= player 1) 2 1) % (dec depth))
                           (get-possible-locations board))))
