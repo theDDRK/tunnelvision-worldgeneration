@@ -2,7 +2,7 @@
 
 (def field ["-", "X", "O"])
 (def ai 4)
-(def debug true)
+(def debug false)
 
 (def empty-board
   "Empty board 7x6"
@@ -122,8 +122,6 @@
 (defn minimax
   "Minimax algorithm to determine the best move."
   [board player x depth]
-  (if (or (< x 0) (> x 6))
-    (throw (IllegalArgumentException. (str "x must be in range of 0-6 x:" x)))(flush))
   (cond
     (zero? depth) (score-board board player)
     (win? board x (first (filter #(not= (field 0) (get-in board [x %])) (range 6))) player) 99999
