@@ -17,7 +17,7 @@
   (map (fn [row]
          (apply str (map (fn [tile]
                            (let [text (tile-to-text tile)]
-                             (str text (apply str "  "))))
+                             (str text (apply str " "))))
                          row)))
        chunk))
 
@@ -31,6 +31,7 @@
         text-area   (seesaw/text :multi-line? true
                                  :editable? false
                                  :text "Generated chunk will appear here.")
+        seed-text   (seesaw/label :text "World Seed:")
         seed-slider (seesaw/slider :id :seed-slider
                                    :min 1
                                    :max 100
@@ -43,12 +44,14 @@
                                                       (let [worldseed    (seesaw/value seed-slider)
                                                             chunk-width  50
                                                             chunk-height 50
-                                                            empty-chunk  (wg/empty-chunk chunk-width chunk-height)
-                                                            chunk        (wg/generate-chunk empty-chunk worldseed 0 0 chunk-width chunk-height)
+                                                            empty-atom-chunk  (atom (wg/empty-chunk chunk-width chunk-height))
+                                                            chunk        (wg/generate-chunk empty-atom-chunk worldseed 0 0 chunk-width chunk-height)
                                                             chunk-str    (print-chunk chunk)]
-                                                        (seesaw/config! text-area :text chunk-str)))])]
-    (seesaw/config! frame :content (seesaw/border-panel :north seed-slider
-                                                        :center (seesaw/border-panel :north button :center text-area)))
+                                                        (seesaw/config! text-area :text chunk-str :font "Monospaced")))])]
+    (seesaw/config! frame
+                    :content (seesaw/border-panel :north (seesaw/horizontal-panel :items [seed-text seed-slider])
+                                                  :center (seesaw/border-panel :north button
+                                                                               :center text-area)))
     (seesaw/invoke-later
      (seesaw/pack! frame)
      (seesaw/show! frame))))
@@ -56,8 +59,8 @@
 
 
                         
-;; (defn -main []
-;;   (create-popup))
+(defn -main []
+  (create-popup))
 
 ;; (defn -main [& args]
 ;;   (let [chunk-width  50
