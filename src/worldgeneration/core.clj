@@ -56,8 +56,8 @@
 
 
                         
-(defn -main []
-  (create-popup))
+;; (defn -main []
+;;   (create-popup))
 
 ;; (defn -main [& args]
 ;;   (let [chunk-width  50
