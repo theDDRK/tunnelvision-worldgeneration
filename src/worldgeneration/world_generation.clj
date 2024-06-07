@@ -219,12 +219,12 @@
              (search chunk width height start end open closed g-score)
              (let [[dx dy] (first neighbors)
                    neighbor [(+ (first curr) dx) (+ (second curr) dy)]
-                   tentative-g-score (+ (get g-score curr) 1)] ; Assuming all edges have the same weight
-               (if (or (not (contains? g-score neighbor)) (< tentative-g-score (get g-score neighbor)))
+                   new-g-score (+ (get g-score curr) 1)]
+               (if (or (not (contains? g-score neighbor)) (< new-g-score (get g-score neighbor)))
                  (let [closed (assoc closed neighbor curr)
-                       g-score (assoc g-score neighbor tentative-g-score)
-                       f-score (+ tentative-g-score (manhatten-distance neighbor end))
-                       open (assoc open neighbor [f-score tentative-g-score (manhatten-distance neighbor end)])]
+                       g-score (assoc g-score neighbor new-g-score)
+                       f-score (+ new-g-score (manhatten-distance neighbor end))
+                       open (assoc open neighbor [f-score new-g-score (manhatten-distance neighbor end)])]
                    (recur (rest neighbors) open closed g-score))
                  (recur (rest neighbors) open closed g-score)))))))))))
 
